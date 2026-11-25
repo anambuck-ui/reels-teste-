@@ -1,0 +1,251 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Simulador do BPC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap">
+<style>
+/* Uma pergunta por tela, letra grande, botões do tamanho do dedo: público de 65 anos ou mais */
+:root{
+  --navy:#0B1F50; --navy2:#14307A; --gold:#C9A86A; --gold-l:#E6C98E; --paper:#FBF8F1; --ink:#14182A;
+  --muted:#4A5677; --line:#E3DCCB; --verde:#1F7A4D; --verde-bg:#E6F3EC; --ambar:#8A5A00; --ambar-bg:#FFF3D6;
+  --verm:#A12828; --verm-bg:#FBE9E7; --wa:#1F7A4D;
+  --font:'Montserrat','Segoe UI',Arial,sans-serif; --fs:21px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--font);font-size:var(--fs);-webkit-font-smoothing:antialiased}
+button,input{font-family:inherit}
+.top{background:var(--navy);color:#fff;padding-block:22px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:620px;margin:0 auto}
+.pill{display:inline-block;padding:6px 16px;border-radius:999px;background:var(--gold-l);color:var(--navy);font-weight:800;font-size:13px;letter-spacing:.16em}
+.top h1{margin:12px 0 4px;font-size:clamp(26px,7vw,34px);line-height:1.15;font-weight:800;text-wrap:balance}
+.top h1 span{color:var(--gold-l)}
+.top p{margin:0;color:#C9D0E4;font-size:17px;font-weight:500}
+.bar{height:8px;border-radius:8px;background:rgba(255,255,255,.18);margin-top:16px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--gold-l);transition:width .35s}
+main{padding-block:24px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.passo{color:var(--muted);font-weight:700;font-size:16px;letter-spacing:.04em}
+h2{margin:6px 0 8px;color:var(--navy);font-size:calc(var(--fs)*1.3);line-height:1.22;font-weight:800;text-wrap:balance}
+.dica{margin:0 0 18px;color:var(--muted);font-weight:600;font-size:calc(var(--fs)*.82);line-height:1.45}
+.ops{display:flex;flex-direction:column;gap:12px}
+.ops.grade{display:grid;grid-template-columns:repeat(4,1fr)}
+.op{min-height:66px;padding:14px 18px;border-radius:16px;border:3px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:var(--fs);text-align:left;line-height:1.3;cursor:pointer}
+.grade .op{text-align:center;padding:14px 6px;font-weight:800}
+.op:hover{background:#EEF1FA}
+.op:focus-visible,.btn:focus-visible,.voltar:focus-visible,.ouvir:focus-visible,input:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.op.on{background:var(--navy);color:#fff}
+.campo{display:flex;align-items:center;gap:10px;border:3px solid var(--navy);border-radius:16px;background:#fff;padding:0 16px;min-height:72px}
+.campo b{color:var(--navy);font-size:calc(var(--fs)*1.2)}
+.campo input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:calc(var(--fs)*1.35);font-weight:800;color:var(--ink);padding:12px 0}
+.erro{color:var(--verm);font-weight:700;font-size:17px;min-height:1.4em;margin:8px 2px 0}
+.linha{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.btn{flex:1;min-width:150px;min-height:64px;border-radius:16px;border:0;background:var(--navy);color:#fff;font-weight:800;font-size:var(--fs);cursor:pointer}
+.btn.sec{background:#fff;color:var(--navy);border:3px solid var(--navy)}
+.rodape{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:26px;flex-wrap:wrap}
+.voltar,.ouvir{background:none;border:0;color:var(--navy);font-weight:700;font-size:18px;text-decoration:underline;cursor:pointer;padding:8px 2px}
+.priv{margin-top:22px;color:var(--muted);font-size:15px;font-weight:500;line-height:1.45}
+/* resultado */
+.res{border-radius:20px;padding:22px 20px;border:3px solid}
+.res.verde{background:var(--verde-bg);border-color:var(--verde)}
+.res.ambar{background:var(--ambar-bg);border-color:var(--gold)}
+.res.verm{background:var(--verm-bg);border-color:var(--verm)}
+.selo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.selo::before{content:"";width:18px;height:18px;border-radius:50%;background:currentColor}
+.verde .selo{color:var(--verde)} .ambar .selo{color:var(--ambar)} .verm .selo{color:var(--verm)}
+.res h2{margin-top:10px}
+.res p{margin:0;line-height:1.5;font-weight:600}
+.conta{margin-top:18px;border-radius:14px;background:#fff;padding:14px 16px;font-size:18px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums}
+.conta div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 0}
+.conta div:last-child{border:0;font-weight:800;color:var(--navy)}
+h3{margin:26px 0 8px;color:var(--navy);font-size:calc(var(--fs)*1.05);font-weight:800}
+ul.pend{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ul.pend li{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;line-height:1.45;font-weight:600;font-size:19px}
+ul.pend li strong{color:var(--navy)}
+.cta{margin-top:24px;padding:20px;border-radius:18px;background:var(--navy);color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.cta p{margin:0;font-weight:700;line-height:1.45}
+.wa{display:inline-flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:420px;min-height:66px;border-radius:16px;background:var(--wa);color:#fff;font-weight:800;font-size:calc(var(--fs)*1.02);text-decoration:none;border:3px solid #fff}
+.num{font-size:16px;color:#C9D0E4;font-weight:600;user-select:all}
+.presente{margin-top:18px;padding:18px 20px;border-radius:18px;border:3px solid var(--gold);background:#fff;display:flex;flex-direction:column;gap:12px;text-align:center}
+.presente p{margin:0;font-weight:700;color:var(--navy);line-height:1.45}
+.presente .btn{display:flex;align-items:center;justify-content:center;text-decoration:none;background:var(--gold-l);color:var(--navy)}
+.aviso{margin-top:22px;color:var(--muted);font-size:15px;line-height:1.5;font-weight:500}
+.assin{margin-top:16px;color:var(--navy);font-size:15px;font-weight:700}
+@media (max-width:420px){.ops.grade{grid-template-columns:repeat(4,1fr)}.op{font-size:19px}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head><body>
+<header class="top"><div class="wrap">
+  <span class="pill">SIMULAÇÃO GRATUITA</span>
+  <h1>Será que dá pra receber o <span>BPC LOAS</span>?</h1>
+  <p>Responda 7 perguntas rápidas e veja o resultado na hora.</p>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+</div></header>
+
+<main><div class="wrap" id="tela" aria-live="polite"></div></main>
+
+<script>
+const SM = 1621, L1 = SM / 4, L2 = SM / 2;
+const WA = "5516976049128", WA_TXT = "(16) 97604-9128";
+const brl = v => "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+const P = [
+  {id: "idade", t: "Quantos anos tem a pessoa que vai pedir o BPC?",
+   d: "Pode ser você ou alguém da sua família.",
+   ops: [["65", "65 anos ou mais"], ["def", "Menos de 65, com deficiência ou doença que dura muito tempo"], ["nao", "Menos de 65, sem deficiência"]]},
+  {id: "benef", t: "Ela já recebe aposentadoria, pensão ou outro benefício do INSS?",
+   d: "Bolsa Família não conta aqui.",
+   ops: [["nao", "Não recebe nada do INSS"], ["bpc", "Já recebe o BPC"], ["sim", "Sim, recebe aposentadoria, pensão ou auxílio"], ["ns", "Não sei"]]},
+  {id: "pessoas", t: "Quantas pessoas moram na casa, contando com ela?",
+   d: "Conte a pessoa, marido ou esposa, pais, filhos e irmãos solteiros que moram juntos. Filho casado não entra na conta.",
+   grade: true, ops: [["1","1"],["2","2"],["3","3"],["4","4"],["5","5"],["6","6"],["7","7"],["8","8+"]]},
+  {id: "renda", t: "Quanto a casa ganha por mês, somando todo mundo?",
+   d: "Some salários, aposentadorias e pensões de quem você contou. Bolsa Família não entra.", renda: true},
+  {id: "desc", t: "Alguém da casa com 65 anos ou mais, ou com deficiência, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?",
+   d: "Esse valor não entra na conta da renda do BPC (Lei 8.742/93, art. 20, § 14).",
+   se: r => +r.pessoas > 1,
+   ops: [["0", "Não"], ["1", "Sim, uma pessoa"], ["2", "Sim, duas pessoas"]]},
+  {id: "cad", t: "A família está no CadÚnico, o cadastro do CRAS?",
+   ops: [["ok", "Sim, atualizei nos últimos 2 anos"], ["velho", "Sim, mas faz mais de 2 anos"], ["nao", "Não tenho CadÚnico"], ["ns", "Não sei"]]},
+  {id: "pedido", t: "Ela já pediu o BPC alguma vez?",
+   ops: [["nunca", "Nunca pediu"], ["negado", "Pediu e foi negado"], ["espera", "Pediu e está esperando a resposta"]]}
+];
+
+let r = {}, hist = [];
+const tela = document.getElementById("tela"), prog = document.getElementById("prog");
+const visiveis = () => P.filter(p => !p.se || p.se(r));
+
+function falar(txt){
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = "pt-BR"; u.rate = .92; speechSynthesis.speak(u); } catch(e){}
+}
+
+function mostra(i){
+  const lista = visiveis(), p = lista[i];
+  prog.style.width = (i / lista.length * 100) + "%";
+  let h = `<div class="passo">Pergunta ${i + 1} de ${lista.length}</div><h2 id="q">${p.t}</h2>`;
+  if (p.d) h += `<p class="dica">${p.d}</p>`;
+  if (p.renda) {
+    h += `<label class="campo" for="vr"><b>R$</b><input id="vr" inputmode="decimal" autocomplete="off" placeholder="0,00" value="${r.renda != null && r.renda !== "ns" ? String(r.renda).replace(".", ",") : ""}"></label>
+      <div class="erro" id="er"></div>
+      <div class="linha"><button class="btn" id="ok">Continuar</button><button class="btn sec" id="ns">Não sei</button></div>`;
+  } else {
+    h += `<div class="ops${p.grade ? " grade" : ""}">` + p.ops.map(([v, l]) =>
+      `<button class="op${r[p.id] === v ? " on" : ""}" data-v="${v}">${l}</button>`).join("") + `</div>`;
+  }
+  h += `<div class="rodape">${i > 0 ? '<button class="voltar" id="volta">← Voltar</button>' : "<span></span>"}<button class="ouvir" id="ouve">🔊 Ouvir a pergunta</button></div>`;
+  if (i === 0) h += `<p class="priv">As respostas ficam só no seu celular. Nada é guardado nem enviado, a não ser que você toque no botão do WhatsApp no fim.</p>`;
+  tela.innerHTML = h;
+  const avancar = () => { hist.push(i); const n = visiveis(); i + 1 < n.length ? mostra(i + 1) : resultado(); window.scrollTo(0, 0); };
+  tela.querySelectorAll(".op").forEach(b => b.onclick = () => { r[p.id] = b.dataset.v; if (p.id === "benef" && r.benef === "bpc") { hist.push(i); manter(); window.scrollTo(0, 0); return; } avancar(); });
+  if (p.renda) {
+    const inp = document.getElementById("vr");
+    document.getElementById("ok").onclick = () => {
+      const s = inp.value.replace(/[R$\s]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
+      const v = parseFloat(s);
+      if (s === "" || isNaN(v) || v < 0) { document.getElementById("er").textContent = "Escreva o valor, por exemplo 1621. Se a casa não tem renda, escreva 0."; return; }
+      r.renda = v; avancar();
+    };
+    inp.onkeydown = e => { if (e.key === "Enter") document.getElementById("ok").click(); };
+    document.getElementById("ns").onclick = () => { r.renda = "ns"; avancar(); };
+  }
+  const vb = document.getElementById("volta"); if (vb) vb.onclick = () => mostra(hist.pop());
+  document.getElementById("ouve").onclick = () => falar(p.t + ". " + (p.d || "") + " " + (p.ops ? p.ops.map(o => o[1]).join(". ") : ""));
+}
+
+function calcula(){
+  const n = Math.max(1, +r.pessoas || 1), desc = n > 1 ? +(r.desc || 0) : 0;
+  let pc = null, conta = null;
+  if (r.renda !== "ns" && r.renda != null) { conta = Math.max(0, r.renda - desc * SM); pc = conta / n; }
+  let cor, titulo, texto;
+  if (r.idade === "nao") {
+    cor = "verm"; titulo = "Pela idade, o BPC ainda não se aplica";
+    texto = "O BPC é para quem tem 65 anos ou mais, ou para pessoa com deficiência de qualquer idade. Quando a pessoa fizer 65 anos, vale fazer a simulação de novo.";
+  } else if (r.benef === "sim") {
+    cor = "verm"; titulo = "Algum requisito pode não bater hoje";
+    texto = "O BPC não pode ser recebido junto com aposentadoria ou pensão (Lei 8.742/93, art. 20, § 4º). Em alguns casos dá pra comparar qual benefício vale mais. Pra saber se é o seu caso, procure um advogado especialista.";
+  } else if (pc === null) {
+    cor = "ambar"; titulo = "Pode haver chance, mas falta a renda";
+    texto = "Sem o valor da renda da casa não dá pra fazer a conta. Com os documentos em mãos, um advogado especialista consegue analisar.";
+  } else if (pc <= L1) {
+    cor = r.benef === "ns" ? "ambar" : "verde";
+    titulo = cor === "verde" ? "Pelas suas respostas, a pessoa pode cumprir os requisitos básicos do BPC" : "A renda bate, mas falta confirmar os benefícios";
+    texto = cor === "verde" ? "A renda por pessoa ficou dentro do limite de 2026. Cada caso ainda depende dos documentos e do cadastro." : "A renda por pessoa ficou dentro do limite, mas é preciso confirmar se a pessoa já recebe algum benefício do INSS.";
+  } else if (pc <= L2) {
+    cor = "ambar"; titulo = "Pode haver chance, depende de uma análise";
+    texto = "A renda por pessoa passou de 1/4 do salário mínimo, mas ficou até a metade. Nessa faixa, outros fatos da família podem ser avaliados, como gastos com remédio e tratamento (Lei 8.742/93, art. 20, § 11-A).";
+  } else {
+    cor = "verm"; titulo = "Pela renda, algum requisito pode não bater hoje";
+    texto = "A renda por pessoa ficou acima da metade do salário mínimo. Se alguém sair da casa, mudar de emprego ou a renda cair, a situação muda e vale simular de novo.";
+  }
+  return {cor, titulo, texto, n, desc, conta, pc};
+}
+
+function pendencias(c){
+  const l = [];
+  if (r.idade === "def") l.push("<strong>Perícia e avaliação social.</strong> Pra quem tem menos de 65 anos, o INSS confere a deficiência numa perícia médica e numa avaliação social.");
+  if (r.cad === "velho") l.push("<strong>Atualize o CadÚnico no CRAS.</strong> O cadastro precisa ter sido atualizado nos últimos 2 anos.");
+  if (r.cad === "nao" || r.cad === "ns") l.push("<strong>Faça ou confira o CadÚnico no CRAS.</strong> Sem o CadÚnico em dia, o INSS não analisa o pedido do BPC.");
+  if (r.cad === "ok") l.push("<strong>CadÚnico em dia.</strong> Confira se todos que moram na casa estão no cadastro, com a renda certa.");
+  if (r.pedido === "negado") l.push("<strong>Pedido negado antes.</strong> A carta do INSS diz o motivo. Guarde ela: um advogado especialista consegue ver o que aconteceu.");
+  if (r.pedido === "espera") l.push("<strong>Pedido em análise.</strong> Acompanhe pelo Meu INSS e responda as cartas do INSS no prazo.");
+  if (c.desc > 0) l.push("<strong>O benefício de 1 salário mínimo foi tirado da conta.</strong> O BPC ou a aposentadoria de até 1 mínimo de idoso de 65+ ou de pessoa com deficiência da casa não entra na renda (art. 20, § 14).");
+  return l;
+}
+
+const NOME = {idade: {"65": "65 anos ou mais", def: "menos de 65, com deficiência", nao: "menos de 65, sem deficiência"},
+  benef: {nao: "não recebe benefício do INSS", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
+  cad: {ok: "CadÚnico atualizado", velho: "CadÚnico com mais de 2 anos", nao: "sem CadÚnico", ns: "não sabe do CadÚnico"},
+  pedido: {nunca: "nunca pediu", negado: "pediu e foi negado", espera: "pediu e está esperando"}};
+const CARTA = "https://anambuck-ui.github.io/reels-teste-/carta/";
+const COR_TXT = {verde: "VERDE (pode cumprir os requisitos básicos)", ambar: "AMARELO (depende de análise)", verm: "VERMELHO (algum requisito pode não bater)"};
+
+function resultado(){
+  prog.style.width = "100%";
+  const c = calcula(), pend = pendencias(c);
+  let h = `<div class="res ${c.cor}"><span class="selo">${{verde: "Boa notícia", ambar: "Precisa de análise", verm: "Atenção"}[c.cor]}</span>
+    <h2>${c.titulo}</h2><p>${c.texto}</p>`;
+  if (c.pc !== null && r.idade !== "nao") {
+    h += `<div class="conta"><div><span>Renda da casa</span><span>${brl(r.renda)}</span></div>` +
+      (c.desc ? `<div><span>Tirado da conta (§ 14)</span><span>− ${brl(Math.min(r.renda, c.desc * SM))}</span></div>` : "") +
+      `<div><span>Dividido por ${c.n} ${c.n > 1 ? "pessoas" : "pessoa"}</span><span>${brl(c.pc)}</span></div>
+       <div><span>Limite de 2026 por pessoa</span><span>${brl(L1)}</span></div></div>`;
+  }
+  h += `</div>`;
+  if (pend.length) h += `<h3>O que olhar agora</h3><ul class="pend">${pend.map(x => `<li>${x}</li>`).join("")}</ul>`;
+  const msg = `Oi! Fiz a simulação do BPC pelo Instagram da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : brl(r.renda)}` +
+    (c.desc ? `\nBenefício de 1 mínimo na casa: ${c.desc}` : "") + (c.pc !== null ? `\nRenda por pessoa: ${brl(c.pc)}` : "") +
+    `\nCadÚnico: ${NOME.cad[r.cad]}\nPedido: ${NOME.pedido[r.pedido]}\nQuero saber mais.`;
+  h += `<div class="cta"><p>Cada caso depende dos documentos. Pra analisar o seu, procure um advogado especialista.</p>
+    <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Saiba mais com uma especialista</a>
+    <span class="num">WhatsApp ${WA_TXT}</span></div>` +
+    (c.cor === "verm" ? `<div class="presente"><p>Preparei também uma carta com o que precisa pra pedir e pra manter o BPC, pra quando a situação mudar.</p><a class="btn" href="${CARTA}" target="_blank" rel="noopener">Abrir a carta 🎁</a></div>` : "") +
+    `<div class="linha"><button class="btn sec" id="refaz">Refazer a simulação</button></div>
+    <p class="aviso">Esta é uma simulação informativa, feita só com as suas respostas. Ela não é a análise do INSS e não garante o benefício. Regras: Lei 8.742/93, art. 20; salário mínimo de 2026: R$ 1.621.</p>
+    <p class="assin">Dra. Ana Mara Buck · OAB/SP 144.691</p>`;
+  tela.innerHTML = h;
+  document.getElementById("refaz").onclick = () => { r = {}; hist = []; mostra(0); window.scrollTo(0, 0); };
+  setTimeout(() => falar(c.titulo + ". " + c.texto), 50);
+}
+
+function manter(){
+  prog.style.width = "100%";
+  const msg = "Oi! Fiz a simulação do BPC pelo Instagram da Dra. Ana.\nJá recebo o BPC e quero saber mais sobre como manter.";
+  tela.innerHTML = `<div class="res verde"><span class="selo">Pra quem já recebe</span>
+    <h2>Quem já recebe o BPC precisa manter o cadastro em dia</h2>
+    <p>O INSS revisa o benefício. Estes cuidados ajudam a não ter o BPC suspenso.</p></div>
+    <h3>O que olhar agora</h3><ul class="pend">
+    <li><strong>CadÚnico a cada 2 anos.</strong> Atualize no CRAS, mesmo que nada tenha mudado.</li>
+    <li><strong>Mudou alguma coisa? Avise o CRAS.</strong> Mudança de casa, alguém que entrou ou saiu, renda nova.</li>
+    <li><strong>Saque o benefício.</strong> Cartão mais de 60 dias sem saque pode bloquear o pagamento.</li>
+    <li><strong>Responda as cartas do INSS no prazo.</strong> Guarde todas e veja o Meu INSS de vez em quando.</li></ul>
+    <div class="presente"><p>A carta com o que precisa pra pedir e pra manter o BPC é sua.</p><a class="btn" href="${CARTA}" target="_blank" rel="noopener">Abrir a carta 🎁</a></div>
+    <div class="cta"><p>Recebeu carta do INSS ou ficou com dúvida? Procure um advogado especialista.</p>
+    <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Saiba mais com uma especialista</a>
+    <span class="num">WhatsApp ${WA_TXT}</span></div>
+    <div class="linha"><button class="btn sec" id="refaz">Refazer a simulação</button></div>
+    <p class="aviso">Conteúdo informativo. Regras: Lei 8.742/93, art. 21 (revisão do benefício); Decreto 6.214/2007.</p>
+    <p class="assin">Dra. Ana Mara Buck · OAB/SP 144.691</p>`;
+  document.getElementById("refaz").onclick = () => { r = {}; hist = []; mostra(0); window.scrollTo(0, 0); };
+}
+
+mostra(0);
+</script>
+</body></html>
