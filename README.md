@@ -16,3 +16,9 @@ Cópia de todos os vídeos finais e das legendas. Atualizado em 25/11/2026.
 | Variações 1 a 9 e Dúvidas 1 a 4 (24-11) | em espera: são da gravação do CPF, só depois que o reel esfriar |
 
 Legendas na pasta `legendas/`.
+
+## Reels normais
+
+| Vídeo | Status |
+| --- | --- |
+| BPC - pode comprar carro e casa (26-11) | postado 26/11 16h (IG 18117314744171213, FB e TikTok) |
