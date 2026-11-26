@@ -90,28 +90,30 @@ const brl = v => "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits: 2, ma
 const P = [
   {id: "quem", t: "Pra quem é a simulação?",
    ops: [["eu", "Pra mim"], ["pais", "Pro meu pai ou pra minha mãe"], ["outro", "Pra outro familiar"]]},
-  {id: "idade", t: "Quantos anos tem a pessoa que vai pedir o BPC?",
+  {id: "idade", t: "Quantos anos tem a pessoa que vai pedir o BPC?", te: "Quantos anos você tem?",
    d: "O BPC do idoso é a partir dos 65 anos.",
    ops: [["65", "65 anos ou mais"], ["quase", "64 anos"], ["nao", "Menos de 64 anos"]]},
-  {id: "benef", t: "Ela já recebe aposentadoria, pensão ou outro benefício do INSS?",
-   d: "Bolsa Família não conta aqui.",
-   ops: [["nao", "Não recebe nada do INSS"], ["bpc", "Já recebe o BPC"], ["sim", "Sim, recebe aposentadoria, pensão ou auxílio"], ["ns", "Não sei"]]},
-  {id: "pessoas", t: "Quantas pessoas moram na casa, contando com ela?",
+  {id: "benef", t: "Ela já recebe algum benefício?", te: "Você já recebe algum benefício?",
+   ops: [["nao", "Não recebe nenhum benefício"], ["bf", "Recebe o Bolsa Família"], ["bpc", "Já recebe o BPC"], ["sim", "Recebe aposentadoria, pensão ou auxílio do INSS"], ["ns", "Não sei"]]},
+  {id: "pessoas", t: "Quantas pessoas moram na casa, contando com ela?", te: "Quantas pessoas moram na sua casa, contando com você?",
    d: "Conte a pessoa, o marido ou a esposa e os filhos ou irmãos solteiros que moram juntos. Filho casado não entra na conta.",
+   de: "Conte você, o seu marido ou a sua esposa e os filhos ou irmãos solteiros que moram com você. Filho casado não entra na conta.",
    grade: true, ops: [["1","1"],["2","2"],["3","3"],["4","4"],["5","5"],["6","6"],["7","7"],["8","8+"]]},
-  {id: "renda", t: "Quanto a casa ganha por mês, somando todo mundo?",
-   d: "Some salários, aposentadorias e pensões de quem você contou. Bolsa Família não entra.", renda: true},
-  {id: "desc", t: "Alguém da casa com 65 anos ou mais, como o marido ou a esposa, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?",
+  {id: "renda", t: "Quanto a casa ganha por mês, somando todo mundo?", te: "Quanto a sua casa ganha por mês, somando todo mundo?",
+   d: "Some salários, aposentadorias e pensões de quem você contou.", renda: true},
+  {id: "desc", t: "Alguém da casa com 65 anos ou mais, como o marido ou a esposa, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?", te: "Alguém da sua casa com 65 anos ou mais, como o seu marido ou a sua esposa, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?",
    d: "Esse valor não entra na conta da renda do BPC (Lei 8.742/93, art. 20, § 14).",
    se: r => +r.pessoas > 1,
    ops: [["0", "Não"], ["1", "Sim, uma pessoa"], ["2", "Sim, duas pessoas"]]},
-  {id: "cad", t: "A família está no CadÚnico, o cadastro do CRAS?",
+  {id: "cad", t: "A família está no CadÚnico, o cadastro do CRAS?", te: "A sua família está no CadÚnico, o cadastro do CRAS?",
    ops: [["ok", "Sim, atualizei nos últimos 2 anos"], ["velho", "Sim, mas faz mais de 2 anos"], ["nao", "Não tenho CadÚnico"], ["ns", "Não sei"]]},
-  {id: "pedido", t: "Ela já pediu o BPC alguma vez?",
+  {id: "pedido", t: "Ela já pediu o BPC alguma vez?", te: "Você já pediu o BPC alguma vez?",
    ops: [["nunca", "Nunca pediu"], ["negado", "Pediu e foi negado"], ["espera", "Pediu e está esperando a resposta"]]}
 ];
 
 let r = {}, hist = [];
+const EU = () => r.quem === "eu";
+const T = p => EU() && p.te ? p.te : p.t, D = p => EU() && p.de ? p.de : p.d;
 const tela = document.getElementById("tela"), prog = document.getElementById("prog");
 const visiveis = () => P.filter(p => (!p.se || p.se(r)) && (r.idade !== "nao" || p.id === "quem" || p.id === "idade"));
 
@@ -122,8 +124,8 @@ function falar(txt){
 function mostra(i){
   const lista = visiveis(), p = lista[i];
   prog.style.width = (i / lista.length * 100) + "%";
-  let h = `<div class="passo">Pergunta ${i + 1} de ${lista.length}</div><h2 id="q">${p.t}</h2>`;
-  if (p.d) h += `<p class="dica">${p.d}</p>`;
+  let h = `<div class="passo">Pergunta ${i + 1} de ${lista.length}</div><h2 id="q">${T(p)}</h2>`;
+  if (D(p)) h += `<p class="dica">${D(p)}</p>`;
   if (p.renda) {
     h += `<label class="campo" for="vr"><b>R$</b><input id="vr" inputmode="decimal" autocomplete="off" placeholder="0,00" value="${r.renda != null && r.renda !== "ns" ? String(r.renda).replace(".", ",") : ""}"></label>
       <div class="erro" id="er"></div>
@@ -149,7 +151,7 @@ function mostra(i){
     document.getElementById("ns").onclick = () => { r.renda = "ns"; avancar(); };
   }
   const vb = document.getElementById("volta"); if (vb) vb.onclick = () => mostra(hist.pop());
-  document.getElementById("ouve").onclick = () => falar(p.t + ". " + (p.d || "") + " " + (p.ops ? p.ops.map(o => o[1]).join(". ") : ""));
+  document.getElementById("ouve").onclick = () => falar(T(p) + ". " + (D(p) || "") + " " + (p.ops ? p.ops.map(o => o[1]).join(". ") : ""));
 }
 
 function calcula(){
@@ -159,7 +161,7 @@ function calcula(){
   let cor, titulo, texto;
   if (r.idade === "nao") {
     cor = "verm"; titulo = "Pela idade, o BPC do idoso ainda não se aplica";
-    texto = "O BPC do idoso começa aos 65 anos. Quando a pessoa chegar perto dessa idade, vale fazer a simulação de novo.";
+    texto = "O BPC do idoso começa aos 65 anos. Quando " + (EU() ? "você chegar" : "a pessoa chegar") + " perto dessa idade, vale fazer a simulação de novo.";
   } else if (r.idade === "quase" && r.benef !== "sim") {
     cor = "ambar"; titulo = "Quase lá: falta pouco pros 65 anos";
     texto = "Até lá, dá pra deixar tudo pronto: o CadÚnico em dia no CRAS e os documentos da casa." + (pc !== null ? (pc <= L1 ? " Pela renda que você informou, a conta da casa ficou dentro do limite de 2026." : " Pela renda que você informou, a conta da casa passou do limite de 2026: vale simular de novo perto dos 65.") : "");
@@ -171,8 +173,8 @@ function calcula(){
     texto = "Sem o valor da renda da casa não dá pra fazer a conta. Com os documentos em mãos, um advogado especialista consegue analisar.";
   } else if (pc <= L1) {
     cor = r.benef === "ns" ? "ambar" : "verde";
-    titulo = cor === "verde" ? "Pelas suas respostas, a pessoa pode cumprir os requisitos básicos do BPC" : "A renda bate, mas falta confirmar os benefícios";
-    texto = cor === "verde" ? "A renda por pessoa ficou dentro do limite de 2026. Cada caso ainda depende dos documentos e do cadastro." : "A renda por pessoa ficou dentro do limite, mas é preciso confirmar se a pessoa já recebe algum benefício do INSS.";
+    titulo = cor === "verde" ? "Pelas suas respostas, " + (EU() ? "você pode" : "a pessoa pode") + " cumprir os requisitos básicos do BPC" : "A renda bate, mas falta confirmar os benefícios";
+    texto = cor === "verde" ? "A renda por pessoa ficou dentro do limite de 2026. Cada caso ainda depende dos documentos e do cadastro." : "A renda por pessoa ficou dentro do limite, mas é preciso confirmar se " + (EU() ? "você já recebe" : "a pessoa já recebe") + " algum benefício do INSS.";
   } else if (pc <= L2) {
     cor = "ambar"; titulo = "Pode haver chance, depende de uma análise";
     texto = "A renda por pessoa passou de 1/4 do salário mínimo, mas ficou até a metade. Nessa faixa, outros fatos da família podem ser avaliados, como gastos com remédio e tratamento (Lei 8.742/93, art. 20, § 11-A).";
@@ -188,6 +190,7 @@ function pendencias(c){
   if (r.cad === "velho") l.push("<strong>Atualize o CadÚnico no CRAS.</strong> O cadastro precisa ter sido atualizado nos últimos 2 anos.");
   if (r.cad === "nao" || r.cad === "ns") l.push("<strong>Faça ou confira o CadÚnico no CRAS.</strong> Sem o CadÚnico em dia, o INSS não analisa o pedido do BPC.");
   if (r.cad === "ok") l.push("<strong>CadÚnico em dia.</strong> Confira se todos que moram na casa estão no cadastro, com a renda certa.");
+  if (r.benef === "bf") l.push("<strong>" + (EU() ? "Você recebe" : "Ela recebe") + " o Bolsa Família.</strong> Nesse caso existe a opção de escolher o benefício mais vantajoso pra família. Essa escolha deve ser feita com a orientação de um profissional.");
   if (r.pedido === "negado") l.push("<strong>Pedido negado antes.</strong> A carta do INSS diz o motivo. Guarde ela: um advogado especialista consegue ver o que aconteceu.");
   if (r.pedido === "espera") l.push("<strong>Pedido em análise.</strong> Acompanhe pelo Meu INSS e responda as cartas do INSS no prazo.");
   if (c.desc > 0) l.push("<strong>O benefício de 1 salário mínimo foi tirado da conta.</strong> O BPC ou a aposentadoria de até 1 mínimo de quem tem 65 anos ou mais na casa não entra na renda (art. 20, § 14).");
@@ -196,7 +199,7 @@ function pendencias(c){
 
 const ORIGEM = ({bio: "pela bio do Instagram", tiktok: "pelo TikTok", anuncio: "pelo anúncio", whatsapp: "pelo WhatsApp", site: "pelo site"})[new URLSearchParams(location.search).get("origem")] || "pelo Instagram";
 const NOME = {quem: {eu: "pra mim", pais: "pro pai ou a mãe", outro: "pra outro familiar"}, idade: {"65": "65 anos ou mais", quase: "64 anos", nao: "menos de 64 anos"},
-  benef: {nao: "não recebe benefício do INSS", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
+  benef: {nao: "não recebe benefício", bf: "recebe o Bolsa Família", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
   cad: {ok: "CadÚnico atualizado", velho: "CadÚnico com mais de 2 anos", nao: "sem CadÚnico", ns: "não sabe do CadÚnico"},
   pedido: {nunca: "nunca pediu", negado: "pediu e foi negado", espera: "pediu e está esperando"}};
 const CARTA = "https://anambuck-ui.github.io/reels-teste-/carta/";
