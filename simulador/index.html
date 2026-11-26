@@ -217,8 +217,11 @@ function resultado(){
   if (pend.length) h += `<h3>O que olhar agora</h3><ul class="pend">${pend.map(x => `<li>${x}</li>`).join("")}</ul>`;
   const msg = `Oi! Fiz a simulação do BPC ${ORIGEM} da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nPara: ${NOME.quem[r.quem] || "-"}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : r.renda == null ? "-" : brl(r.renda)}` +
     (c.desc ? `\nBenefício de 1 mínimo na casa: ${c.desc}` : "") + (c.pc !== null ? `\nRenda por pessoa: ${brl(c.pc)}` : "") +
-    `\nCadÚnico: ${NOME.cad[r.cad] || "-"}\nPedido: ${NOME.pedido[r.pedido] || "-"}\nQuero saber mais.`;
-  h += `<div class="cta"><p>Cada caso depende dos documentos. Pra analisar o seu, procure um advogado especialista.</p>
+    `\nCadÚnico: ${NOME.cad[r.cad] || "-"}\nPedido: ${NOME.pedido[r.pedido] || "-"}\n${r.idade === "quase" ? "Quero saber o que preparar pra pedir aos 65." : "Quero saber mais."}`;
+  const ctaTxt = r.idade === "quase"
+    ? "Com 64 anos já dá pra deixar tudo pronto pro pedido. Toque no botão abaixo e tire suas dúvidas com uma especialista sobre o que preparar até os 65."
+    : "Cada caso depende dos documentos. Pra analisar o seu, procure um advogado especialista.";
+  h += `<div class="cta"><p>${ctaTxt}</p>
     <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Saiba mais com uma especialista</a>
     <span class="num">WhatsApp ${WA_TXT}</span></div>` +
     (c.cor === "verm" ? `<div class="presente"><p>Preparei também uma carta com o que precisa pra pedir e pra manter o BPC, pra quando a situação mudar.</p><a class="btn" href="${CARTA}" target="_blank" rel="noopener">Abrir a carta 🎁</a></div>` : "") +
