@@ -74,9 +74,9 @@ ul.pend li strong{color:var(--navy)}
 </style>
 </head><body>
 <header class="top"><div class="wrap">
-  <span class="pill">SIMULAÇÃO GRATUITA</span>
+  <span class="pill">SIMULADOR DO BPC</span>
   <h1>Será que dá pra receber o <span>BPC LOAS</span>?</h1>
-  <p>Responda 7 perguntas rápidas e veja o resultado na hora.</p>
+  <p>Responda algumas perguntas rápidas e veja o resultado na hora.</p>
   <div class="bar" aria-hidden="true"><i id="prog"></i></div>
 </div></header>
 
@@ -190,6 +190,7 @@ function pendencias(c){
   return l;
 }
 
+const ORIGEM = ({tiktok: "pelo TikTok", anuncio: "pelo anúncio", whatsapp: "pelo WhatsApp", site: "pelo site"})[new URLSearchParams(location.search).get("origem")] || "pelo Instagram";
 const NOME = {idade: {"65": "65 anos ou mais", def: "menos de 65, com deficiência", nao: "menos de 65, sem deficiência"},
   benef: {nao: "não recebe benefício do INSS", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
   cad: {ok: "CadÚnico atualizado", velho: "CadÚnico com mais de 2 anos", nao: "sem CadÚnico", ns: "não sabe do CadÚnico"},
@@ -210,7 +211,7 @@ function resultado(){
   }
   h += `</div>`;
   if (pend.length) h += `<h3>O que olhar agora</h3><ul class="pend">${pend.map(x => `<li>${x}</li>`).join("")}</ul>`;
-  const msg = `Oi! Fiz a simulação do BPC pelo Instagram da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : brl(r.renda)}` +
+  const msg = `Oi! Fiz a simulação do BPC ${ORIGEM} da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : brl(r.renda)}` +
     (c.desc ? `\nBenefício de 1 mínimo na casa: ${c.desc}` : "") + (c.pc !== null ? `\nRenda por pessoa: ${brl(c.pc)}` : "") +
     `\nCadÚnico: ${NOME.cad[r.cad]}\nPedido: ${NOME.pedido[r.pedido]}\nQuero saber mais.`;
   h += `<div class="cta"><p>Cada caso depende dos documentos. Pra analisar o seu, procure um advogado especialista.</p>
@@ -227,7 +228,7 @@ function resultado(){
 
 function manter(){
   prog.style.width = "100%";
-  const msg = "Oi! Fiz a simulação do BPC pelo Instagram da Dra. Ana.\nJá recebo o BPC e quero saber mais sobre como manter.";
+  const msg = `Oi! Fiz a simulação do BPC ${ORIGEM} da Dra. Ana.\nJá recebo o BPC e quero saber mais sobre como manter.`;
   tela.innerHTML = `<div class="res verde"><span class="selo">Pra quem já recebe</span>
     <h2>Quem já recebe o BPC precisa manter o cadastro em dia</h2>
     <p>O INSS revisa o benefício. Estes cuidados ajudam a não ter o BPC suspenso.</p></div>
