@@ -74,9 +74,9 @@ ul.pend li strong{color:var(--navy)}
 </style>
 </head><body>
 <header class="top"><div class="wrap">
-  <span class="pill">SIMULADOR DO BPC</span>
-  <h1>Será que dá pra receber o <span>BPC LOAS</span>?</h1>
-  <p>Responda algumas perguntas rápidas e veja o resultado na hora.</p>
+  <span class="pill">SIMULADOR DO BPC DO IDOSO</span>
+  <h1>Tem 65 anos ou mais? Veja se dá pra receber o <span>BPC LOAS</span></h1>
+  <p>O BPC do idoso não pede contribuição ao INSS. Responda algumas perguntas rápidas e veja o resultado na hora.</p>
   <div class="bar" aria-hidden="true"><i id="prog"></i></div>
 </div></header>
 
@@ -88,18 +88,20 @@ const WA = "5516976049128", WA_TXT = "(16) 97604-9128";
 const brl = v => "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
 const P = [
+  {id: "quem", t: "Pra quem é a simulação?",
+   ops: [["eu", "Pra mim"], ["pais", "Pro meu pai ou pra minha mãe"], ["outro", "Pra outro familiar"]]},
   {id: "idade", t: "Quantos anos tem a pessoa que vai pedir o BPC?",
-   d: "Pode ser você ou alguém da sua família.",
-   ops: [["65", "65 anos ou mais"], ["def", "Menos de 65, com deficiência ou doença que dura muito tempo"], ["nao", "Menos de 65, sem deficiência"]]},
+   d: "O BPC do idoso é a partir dos 65 anos.",
+   ops: [["65", "65 anos ou mais"], ["quase", "63 ou 64 anos"], ["nao", "Menos de 63 anos"]]},
   {id: "benef", t: "Ela já recebe aposentadoria, pensão ou outro benefício do INSS?",
    d: "Bolsa Família não conta aqui.",
    ops: [["nao", "Não recebe nada do INSS"], ["bpc", "Já recebe o BPC"], ["sim", "Sim, recebe aposentadoria, pensão ou auxílio"], ["ns", "Não sei"]]},
   {id: "pessoas", t: "Quantas pessoas moram na casa, contando com ela?",
-   d: "Conte a pessoa, marido ou esposa, pais, filhos e irmãos solteiros que moram juntos. Filho casado não entra na conta.",
+   d: "Conte a pessoa, o marido ou a esposa e os filhos ou irmãos solteiros que moram juntos. Filho casado não entra na conta.",
    grade: true, ops: [["1","1"],["2","2"],["3","3"],["4","4"],["5","5"],["6","6"],["7","7"],["8","8+"]]},
   {id: "renda", t: "Quanto a casa ganha por mês, somando todo mundo?",
    d: "Some salários, aposentadorias e pensões de quem você contou. Bolsa Família não entra.", renda: true},
-  {id: "desc", t: "Alguém da casa com 65 anos ou mais, ou com deficiência, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?",
+  {id: "desc", t: "Alguém da casa com 65 anos ou mais, como o marido ou a esposa, já recebe o BPC ou uma aposentadoria de 1 salário mínimo?",
    d: "Esse valor não entra na conta da renda do BPC (Lei 8.742/93, art. 20, § 14).",
    se: r => +r.pessoas > 1,
    ops: [["0", "Não"], ["1", "Sim, uma pessoa"], ["2", "Sim, duas pessoas"]]},
@@ -111,7 +113,7 @@ const P = [
 
 let r = {}, hist = [];
 const tela = document.getElementById("tela"), prog = document.getElementById("prog");
-const visiveis = () => P.filter(p => !p.se || p.se(r));
+const visiveis = () => P.filter(p => (!p.se || p.se(r)) && (r.idade !== "nao" || p.id === "quem" || p.id === "idade"));
 
 function falar(txt){
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = "pt-BR"; u.rate = .92; speechSynthesis.speak(u); } catch(e){}
@@ -156,8 +158,11 @@ function calcula(){
   if (r.renda !== "ns" && r.renda != null) { conta = Math.max(0, r.renda - desc * SM); pc = conta / n; }
   let cor, titulo, texto;
   if (r.idade === "nao") {
-    cor = "verm"; titulo = "Pela idade, o BPC ainda não se aplica";
-    texto = "O BPC é para quem tem 65 anos ou mais, ou para pessoa com deficiência de qualquer idade. Quando a pessoa fizer 65 anos, vale fazer a simulação de novo.";
+    cor = "verm"; titulo = "Pela idade, o BPC do idoso ainda não se aplica";
+    texto = "O BPC do idoso começa aos 65 anos. Quando a pessoa chegar perto dessa idade, vale fazer a simulação de novo.";
+  } else if (r.idade === "quase" && r.benef !== "sim") {
+    cor = "ambar"; titulo = "Quase lá: aos 65 anos o pedido pode ser feito";
+    texto = "Até lá, dá pra deixar tudo pronto: o CadÚnico em dia no CRAS e os documentos da casa." + (pc !== null ? (pc <= L1 ? " Pela renda que você informou, a conta da casa ficou dentro do limite de 2026." : " Pela renda que você informou, a conta da casa passou do limite de 2026: vale simular de novo perto dos 65.") : "");
   } else if (r.benef === "sim") {
     cor = "verm"; titulo = "Algum requisito pode não bater hoje";
     texto = "O BPC não pode ser recebido junto com aposentadoria ou pensão (Lei 8.742/93, art. 20, § 4º). Em alguns casos dá pra comparar qual benefício vale mais. Pra saber se é o seu caso, procure um advogado especialista.";
@@ -180,18 +185,17 @@ function calcula(){
 
 function pendencias(c){
   const l = [];
-  if (r.idade === "def") l.push("<strong>Perícia e avaliação social.</strong> Pra quem tem menos de 65 anos, o INSS confere a deficiência numa perícia médica e numa avaliação social.");
   if (r.cad === "velho") l.push("<strong>Atualize o CadÚnico no CRAS.</strong> O cadastro precisa ter sido atualizado nos últimos 2 anos.");
   if (r.cad === "nao" || r.cad === "ns") l.push("<strong>Faça ou confira o CadÚnico no CRAS.</strong> Sem o CadÚnico em dia, o INSS não analisa o pedido do BPC.");
   if (r.cad === "ok") l.push("<strong>CadÚnico em dia.</strong> Confira se todos que moram na casa estão no cadastro, com a renda certa.");
   if (r.pedido === "negado") l.push("<strong>Pedido negado antes.</strong> A carta do INSS diz o motivo. Guarde ela: um advogado especialista consegue ver o que aconteceu.");
   if (r.pedido === "espera") l.push("<strong>Pedido em análise.</strong> Acompanhe pelo Meu INSS e responda as cartas do INSS no prazo.");
-  if (c.desc > 0) l.push("<strong>O benefício de 1 salário mínimo foi tirado da conta.</strong> O BPC ou a aposentadoria de até 1 mínimo de idoso de 65+ ou de pessoa com deficiência da casa não entra na renda (art. 20, § 14).");
+  if (c.desc > 0) l.push("<strong>O benefício de 1 salário mínimo foi tirado da conta.</strong> O BPC ou a aposentadoria de até 1 mínimo de quem tem 65 anos ou mais na casa não entra na renda (art. 20, § 14).");
   return l;
 }
 
 const ORIGEM = ({bio: "pela bio do Instagram", tiktok: "pelo TikTok", anuncio: "pelo anúncio", whatsapp: "pelo WhatsApp", site: "pelo site"})[new URLSearchParams(location.search).get("origem")] || "pelo Instagram";
-const NOME = {idade: {"65": "65 anos ou mais", def: "menos de 65, com deficiência", nao: "menos de 65, sem deficiência"},
+const NOME = {quem: {eu: "pra mim", pais: "pro pai ou a mãe", outro: "pra outro familiar"}, idade: {"65": "65 anos ou mais", quase: "63 ou 64 anos", nao: "menos de 63 anos"},
   benef: {nao: "não recebe benefício do INSS", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
   cad: {ok: "CadÚnico atualizado", velho: "CadÚnico com mais de 2 anos", nao: "sem CadÚnico", ns: "não sabe do CadÚnico"},
   pedido: {nunca: "nunca pediu", negado: "pediu e foi negado", espera: "pediu e está esperando"}};
@@ -211,9 +215,9 @@ function resultado(){
   }
   h += `</div>`;
   if (pend.length) h += `<h3>O que olhar agora</h3><ul class="pend">${pend.map(x => `<li>${x}</li>`).join("")}</ul>`;
-  const msg = `Oi! Fiz a simulação do BPC ${ORIGEM} da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : brl(r.renda)}` +
+  const msg = `Oi! Fiz a simulação do BPC ${ORIGEM} da Dra. Ana.\nResultado: ${COR_TXT[c.cor]}\nPara: ${NOME.quem[r.quem] || "-"}\nIdade: ${NOME.idade[r.idade]}\nBenefício: ${NOME.benef[r.benef] || "-"}\nMoram na casa: ${c.n}\nRenda da casa: ${r.renda === "ns" ? "não sabe" : r.renda == null ? "-" : brl(r.renda)}` +
     (c.desc ? `\nBenefício de 1 mínimo na casa: ${c.desc}` : "") + (c.pc !== null ? `\nRenda por pessoa: ${brl(c.pc)}` : "") +
-    `\nCadÚnico: ${NOME.cad[r.cad]}\nPedido: ${NOME.pedido[r.pedido]}\nQuero saber mais.`;
+    `\nCadÚnico: ${NOME.cad[r.cad] || "-"}\nPedido: ${NOME.pedido[r.pedido] || "-"}\nQuero saber mais.`;
   h += `<div class="cta"><p>Cada caso depende dos documentos. Pra analisar o seu, procure um advogado especialista.</p>
     <a class="wa" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Saiba mais com uma especialista</a>
     <span class="num">WhatsApp ${WA_TXT}</span></div>` +
