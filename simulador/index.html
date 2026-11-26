@@ -190,7 +190,7 @@ function pendencias(c){
   return l;
 }
 
-const ORIGEM = ({tiktok: "pelo TikTok", anuncio: "pelo anúncio", whatsapp: "pelo WhatsApp", site: "pelo site"})[new URLSearchParams(location.search).get("origem")] || "pelo Instagram";
+const ORIGEM = ({bio: "pela bio do Instagram", tiktok: "pelo TikTok", anuncio: "pelo anúncio", whatsapp: "pelo WhatsApp", site: "pelo site"})[new URLSearchParams(location.search).get("origem")] || "pelo Instagram";
 const NOME = {idade: {"65": "65 anos ou mais", def: "menos de 65, com deficiência", nao: "menos de 65, sem deficiência"},
   benef: {nao: "não recebe benefício do INSS", sim: "recebe aposentadoria, pensão ou auxílio", ns: "não sabe se recebe benefício"},
   cad: {ok: "CadÚnico atualizado", velho: "CadÚnico com mais de 2 anos", nao: "sem CadÚnico", ns: "não sabe do CadÚnico"},
